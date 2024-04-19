@@ -25,7 +25,7 @@ if SCF:
 
 dph = {
     'prefix': d['prefix'],
-    'fildyn': f'MATDYN/{d['prefix']}.dyn',
+    'fildyn': f"MATDYN/{d['prefix']}.dyn",
     'tr2_ph': 1e-17,
     'ldisp': True,
     'nq1': NKX,
@@ -34,7 +34,7 @@ dph = {
     'nmix_ph': 20,
 }
 
-if sys.argv[1] == sys.argv[2] == sys.argv[3] == 1:
+if NKX == NKY == NKZ == 1:
     ph_prefix = 'gamma'
 else:
     ph_prefix = 'grid'

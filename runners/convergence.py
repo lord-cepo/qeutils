@@ -34,10 +34,9 @@ if not os.path.exists('CONV/k'):
 if not os.path.exists('CONV/e'):
     os.makedirs('CONV/e')
 
-if bash.env.PREFIX is not None:
-    d['prefix'] = os.getenv('PREFIX')
-else:
-    d['prefix'] = os.path.basename(os.getcwd())
+if os.getenv('PREFIX') != os.path.basename(os.getcwd()):
+    print(f"WARNING: prefix = {os.getenv('PREFIX')} is different than parent folder {os.path.basename(os.getcwd())}")
+d['prefix'] = os.getenv('PREFIX')
 
 d['conv_thr'] = 1e-5
 d['ecutwfc'] = STARTING_ECUT
@@ -75,6 +74,7 @@ d['ecutwfc'] = ecut-20
 if USPP:
     d['ecutrho'] = d['ecutwfc']*8
 
+py2pw(d, 'pw.in')
 
 
 

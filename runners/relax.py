@@ -7,6 +7,8 @@ d = pw2py('pw.in')
 d['calculation'] = 'relax'
 d['conv_thr'] = 1e-9
 d['ion_dynamics'] = 'bfgs'
+d['forc_conv_thr'] = 1e-4
+d['etot_conv_thr'] = 1e-5
 print("RELAX")
 py2pw(d, 'relax.pw.in')
 bash.srun('relax.pw.in')
