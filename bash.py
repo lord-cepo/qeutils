@@ -37,3 +37,5 @@ def srun(_input, _output=None, exe='pw', debug=False):
             if _input[-3:] == '.in':
                 _output = _input[:-3] + '.out'
         subprocess.run(f"source {env.WORK}/bin/VARS.sh; srun -n {env.NTASKS} --mpi=pmi2 $ESPRESSO_BIN/{exe}.x -in {_input} > {_output}", shell=True)
+        if len(grep("convergence NOT achieved", _output)) > 0:
+            exit(16)
