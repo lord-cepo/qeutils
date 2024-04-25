@@ -1,6 +1,7 @@
 import os
 import subprocess
 from types import SimpleNamespace
+from warnings import warn
 
 env = SimpleNamespace( **{
     'NTASKS': os.getenv('SLURM_NTASKS'),
@@ -31,11 +32,31 @@ def run(command, debug=False):
     if not debug:
         subprocess.run(command, shell=True)
 
-def srun(_input, _output=None, exe='pw', debug=False):
+def srun(_input, _output=None, exe='pw', debug=False, vars=False):
+    if _output is None:
+        if _input[-3:] == '.in':
+            _output = _input[:-3] + '.out'
+        else:
+            raise ValueError("output not defined and file doesn't end with .in")
+    command = f"srun -n {env.NTASKS} --mpi=pmi2 $ESPRESSO_BIN/{exe}.x -in {_input} > {_output}"
+    if vars:
+        command = f'source {env.WORK}/bin/VARS.sh; ' + command
+    print(command)
     if not debug:
-        if _output is None:
-            if _input[-3:] == '.in':
-                _output = _input[:-3] + '.out'
-        subprocess.run(f"source {env.WORK}/bin/VARS.sh; srun -n {env.NTASKS} --mpi=pmi2 $ESPRESSO_BIN/{exe}.x -in {_input} > {_output}", shell=True)
-        if len(grep("convergence NOT achieved", _output)) > 0:
-            exit(16)
+        subprocess.run(command, shell=True)
+        if not pw_completed(_output):
+            warn("The job is not DONE")
+        
+def conditional_warn(message, print_message=True):
+    if print_message:
+        warn(message)
+
+def pw_completed(outfile, warn=True):
+    if not os.path.exists(outfile):
+        conditional_warn(f"Output file {outfile} not found in {os.getcwd()}", print_message=warn)
+        return False
+    if len(grep("JOB DONE", outfile)) == 1:
+        if len(grep("convergence NOT achieved", outfile)) > 0:
+            conditional_warn("Convergence has NOT achieved", print_message=warn)
+        return True
+    return False
