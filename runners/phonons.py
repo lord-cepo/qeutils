@@ -2,13 +2,13 @@ from pwpy import pw2py, py2pw
 from phpy import py2ph
 import os
 import bash
-import sys
+# import sys
 
 ###########################################
 # -----------------------------------------
-NKX = 1
-NKY = 1
-NKZ = 1
+NKX = 4
+NKY = 4
+NKZ = 4
 SCF = True
 # -----------------------------------------
 ###########################################
@@ -35,13 +35,13 @@ def phonons(nkx=NKX, nky=NKY, nkz=NKZ, scf=SCF):
     }
 
     if nkx == nky == nkz == 1:
-        ph_prefix = 'gamma'
+        ph_file = 'gamma.ph.in'
     else:
-        ph_prefix = 'grid'
-    py2ph(dph, ph_prefix+'.ph.in')
+        ph_file = 'grid.ph.in'
+    py2ph(dph, ph_file)
     if not os.path.exists('MATDYN'):
         os.makedirs('MATDYN')
-    bash.srun('gamma.ph.in', exe='ph')
+    bash.srun(ph_file, exe='ph')
 # ph_time = bash.grep("PHONON       :", "gamma.ph.out")[-1].split()[2]
 
 # with open('../results.txt', 'a') as f:

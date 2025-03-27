@@ -1,39 +1,53 @@
+#!/usr/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
+plt.rcParams['figure.facecolor'] = 'none'
+plt.rcParams['axes.facecolor'] = 'none'
+import os
+os.chdir('/gpfsdswork/projects/rech/yhk/unr46rr/bi2te3/PP/PW')
 # filenames
-PREFIXES = ["bi2te3-pbe-nc-sr-exp", "valence"]
-COLORS = ['r', 'g', 'b', 'c', 'm', 'y']
+PREFIXES = ["sd", "d"]
+COLORS = ['seagreen', 'mediumvioletred', 'b', 'c', 'm', 'y']
 # SHIFTS = [8-17.3+0.15, 8-17.3, -9.3, -9.3+0.019, -8.116-0.370, -8.9+0.054]
-SHIFTS = [0, 1.34]
+SHIFTS = [-9-0.3,-10+0.8]
 xvlines = [0, 30, 60, 90, 120]
+VALCOND = [[-15,-13], [-6,-5]]
 labels = ['$\\Gamma$', 'Z', 'F', '$\\Gamma$', 'L']
-NPOINTS = 121
 
-
-for prefix, color, shift in zip(PREFIXES, COLORS, SHIFTS):
-    print_prefix = prefix
-    filename = prefix + '.bands.gnu'
+plt.subplots(figsize=(3, 7))
+for prefix, color, shift, valcond in zip(PREFIXES, COLORS, SHIFTS, VALCOND):
+    print_prefix = "SOC" if prefix=='sd' else "w/o"
+    filename = prefix + '.gnu'
     data = np.loadtxt(filename)
+    # plt.plot(data[:,0], data[:,1]+shift, color=color, label=print_prefix)
+    for i in range(1, data.shape[0]):
+        if data[i,0]-data[i-1,0] < 0:
+            NPOINTS = i
+            break
     data = data.reshape(-1, NPOINTS, 2)
-    # val = make_interp_spline(data[-NPOINTS*6:-NPOINTS*5, 0], data[-NPOINTS*6:-NPOINTS*5, 1])
-    # cond = make_interp_spline(data[-NPOINTS*5:-NPOINTS*4, 0], data[-NPOINTS*5:-NPOINTS*4, 1])
-    # x = np.linspace(data[-NPOINTS*6,0], data[-NPOINTS*5-1,0], 1000)
-    for i in range(data.shape[0]):
-        plt.plot(data[i, :, 0], data[i, :, 1]+shift, color=color, label=print_prefix)
+    val = make_interp_spline(data[valcond[0],:,0], data[valcond[0],:,1])
+    cond = make_interp_spline(data[valcond[1],:,0], data[valcond[1],:, 1])
+    x = np.linspace(data[0,0,0], data[0,NPOINTS-1,0], 1000)
+    for i in valcond:
+        plt.plot(x, val(x)+shift, color=color, label=print_prefix)
+        plt.plot(x, cond(x)+shift, color=color)
         print_prefix = None
-# data_GW = np.loadtxt('GW.bands.gnu')
-# val = make_interp_spline(data_GW[:117, 0], data_GW[:117, 1]+0.086)
-# cond = make_interp_spline(data_GW[117:, 0], data_GW[117:, 1]+0.086)
-# x = np.linspace(0, 4.701, 1000)
-# plt.plot(x, val(x), label='GW', color='orange')
-# plt.plot(x, cond(x), color='orange')
+data_GW = np.loadtxt('GW.gnu')
+val = make_interp_spline(data_GW[:117, 0], data_GW[:117, 1]+0.086)
+cond = make_interp_spline(data_GW[117:, 0], data_GW[117:, 1]+0.086)
+x = np.linspace(0, 4.701, 1000)
+plt.plot(x, val(x), label='GW', color='orange')
+plt.plot(x, cond(x), color='orange')
 
-data_exp = np.loadtxt('bi2te3-lda-nc-sr-exp.bands.gnu')
-for xv in xvlines:
-    plt.axvline(x=data_exp[xv,0], color="black")
-plt.xticks([data_exp[xv,0] for xv in xvlines], labels)
+# data_exp = np.loadtxt('bi2te3-lda-nc-sr-exp.bands.gnu')
+# for xv in xvlines:
+plt.axvline(x=3.32, linestyle='--', color="grey")
+plt.ylabel('energy (eV)')
+plt.xticks([3.32],['$\\Gamma$'])
+plt.xlim(2.8,3.8)
+plt.ylim(-0.8, 1.6)
 plt.legend(loc='upper left')
 plt.tight_layout()
-# plt.savefig('sr-bands.png', dpi=500)
-plt.show()
+plt.savefig('gnu.png', dpi=500)
+# plt.show()

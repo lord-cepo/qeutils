@@ -22,22 +22,24 @@ import bash
 ###########################################
 # -----------------------------------------
 EXEC_PATH = "/linkhome/rech/genimp01/unr46rr/common/thirdorder/thirdorder_espresso.py"
-GRID = [2,2,2]
-MAX_NEIGHBOUR = 3
+GRID = [3,3,3]
+MAX_NEIGHBOUR = 4
 INPUT_FILE = 'pw.in'
 TEMPLATE_FILE = 'template.in'
 RESTART = False
-NWORKERS = os.getenv('SLURM_NNODES')*2
+NWORKERS = os.getenv('SLURM_NNODES')*2 if os.getenv('SLURM_NNODES') is not None else 0
 # -----------------------------------------
 ###########################################
 
 STRUCTURE_PARAMETERS = [f'celldm({i})' for i in range(1,7)] + ['cosAB', 'cosBC', 'cosAC', 'A', 'B', 'C']
 
-def thirdorder_init(exec_path=EXEC_PATH, 
-                    grid=GRID, 
-                    max_neighbour=MAX_NEIGHBOUR, 
-                    input_file=INPUT_FILE, 
-                    template_file=TEMPLATE_FILE):
+def sow(
+    exec_path=EXEC_PATH, 
+    grid=GRID, 
+    max_neighbour=MAX_NEIGHBOUR, 
+    input_file=INPUT_FILE, 
+    template_file=TEMPLATE_FILE
+):
     command = f'{exec_path} {input_file} sow {" ".join(map(str,grid))} -{max_neighbour} {template_file}'
 
     d = pw2py('pw.in')
@@ -68,8 +70,17 @@ def thirdorder_init(exec_path=EXEC_PATH,
 
     os.system(command)
 
+def reap(
+    exec_path=EXEC_PATH, 
+    grid=GRID, 
+    max_neighbour=MAX_NEIGHBOUR, 
+    input_file=INPUT_FILE, 
+    template_file=TEMPLATE_FILE
+):
+    os.system(f"find . -name 'DISP.*out*' | sort -n | {exec_path} {input_file} reap {' '.join(map(str,grid))} -{max_neighbour} {template_file}")
+
 if __name__ == '__main__':
-    thirdorder_init()
+    sow()
     # print("thirdorder files created")
     
     # # SCF calculation of BASE to find a similar charge density to start with (why not relaxing?)
@@ -103,4 +114,4 @@ if __name__ == '__main__':
                 temp.append(wdisp)
         working_disps = temp
         sleep(3)
-    
+    reap()
